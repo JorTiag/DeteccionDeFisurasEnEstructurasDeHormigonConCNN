@@ -1,0 +1,37 @@
+% Enter your MATLAB Code below
+
+% Cambio alertApiKey para que coincida con su clave API de alertas. 
+% Para leer de su propio canal, cambie el channelID valor.
+ChannelIDFisuras = 2227566;
+readAPIKeyFisuras = '9U91DTUCZJ2LGNQG';
+
+% Todas las claves API de alertas comienzan con TAK.
+alertApiKey = 'TAK1r68DeOqtySmTI83';
+
+% Establecer la URL y el encabezado. 
+% El servicio de alertas requiere una ThingSpeak-Alerts-API-Key encabezamiento. 
+% Usar weboptions para establecer el encabezado.
+alertUrl = "https://api.thingspeak.com/alerts/send";
+options = weboptions("HeaderFields", ["ThingSpeak-Alerts-API-Key", alertApiKey ]);
+
+% Establecer el asunto del correo electrónico.
+alertSubject = sprintf("Número Imágenes con Fisura");
+
+% Lea los datos recientes usando thingSpeakRead.
+DatosFisura = thingSpeakRead(ChannelIDFisuras,'Fields',[1],'ReadKey',readAPIKeyFisuras);
+DatosConFisura = thingSpeakRead(ChannelIDFisuras,'Fields',[4],'ReadKey',readAPIKeyFisuras);
+DatosSinFisura = thingSpeakRead(ChannelIDFisuras,'Fields',[5],'ReadKey',readAPIKeyFisuras);
+
+% Usa los datos mas recientes del canal para configurar el mensaje.
+if (DatosFisura>0)
+    
+    alertBody = sprintf('Imágenes detectadas con fisuras: %d\n Imágenes detectadas sin fisuras: %d\n', DatosConFisura,DatosSinFisura );
+    
+    % Envia la solicitud de alerta.
+    try
+    webwrite(alertUrl , "body", alertBody, "subject", alertSubject, options);
+
+    catch someException
+    fprintf("Failed to send alert: %s\n", someException.message);
+    end
+end
